@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/jgthms/minireset.css/master/minireset.css">
+    <title>Lunar Calendar by: Drew Hornbein</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
+
+    <style media="screen">
+      html {
+        background-color: #fff;
+        font-size: 16px;
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased;
+        min-width: 300px;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        text-rendering: optimizeLegibility;
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+
+        box-sizing: border-box;
+      }
+      *, *:before, *:after {
+        box-sizing: inherit;
+      }
+      body {
+        background-color: #192538;
+        color: #80aff9;
+        font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+        font-weight: 400;
+        line-height: 1.5;
+        min-height: 100vh;
+      }
+      button {
+        border: none;
+        margin: 0;
+        width: auto;
+        overflow: visible;
+        background: transparent;
+        color: inherit;
+        line-height: normal;
+        -webkit-font-smoothing: inherit;
+        -moz-osx-font-smoothing: inherit;
+        -webkit-appearance: none;
+
+        cursor: pointer;
+        background: #09101b;
+        border-radius: 3px;
+        padding: 2px 10px;
+        line-height: 1.5;
+        font-size: 0.8em;
+      }
+      button:hover {
+        color: #e1bc4b;
+      }
+      input {
+        border: 1px solid #80aff955;
+        background-color: #09101b;
+        color: #80aff9;
+        padding: 2px 0 2px 15px;
+        line-height: 1.5;
+        font-size: 0.8em;
+      }
+      .nav-year {
+        font-weight: bold;
+      }
+      .mono {
+        font-family: monospace;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5em;
+      }
+      .controls {
+      }
+      .loading {
+        padding: 1em;
+        font-size: 1.5em;
+        text-transform: uppercase;
+        letter-spacing: 12px;
+      }
+      .loading:before {
+        content: "🌝";
+      }
+      .calendar {
+        border-top: 1px solid #80aff933;
+      }
+      .cycle {
+        display: grid;
+        grid-template-columns: repeat(31,1fr);
+        background-image: linear-gradient(to right, #0005 0%, #192538ff 50%, #0005 100%);
+      }
+      .day {
+        border-right: 1px solid #80aff933;
+        padding: 5px 0;
+        text-align: center;
+        position: relative;
+      }
+
+      .day.month-start:before {
+        content: "";
+        height: calc(100% - 10px);
+        position: absolute;
+        border-left: 1px solid;
+        left: 0px;
+        opacity: 0.5;
+      }
+
+      .new .phase:after {
+        content: "🌑";
+      }
+      .new-first .phase:after {
+        content: "🌒";
+      }
+      .first .phase:after {
+        content: "🌓";
+      }
+      .first-full .phase:after {
+        content: "🌔";
+      }
+      .full .phase:after {
+        content: "🌕";
+      }
+      .full-last .phase:after {
+        content: "🌖";
+      }
+      .last .phase:after {
+        content: "🌗";
+      }
+      .last-new .phase:after {
+        content: "🌘";
+      }
+
+      .phase {
+        height: 1.5em;
+      }
+      .month,
+      .week {
+        font-size: 0.6em;
+        text-transform: uppercase;
+      }
+      .day.weekday .week {
+        font-weight: bold;
+      }
+      .date {
+        font-weight: bold;
+      }
+
+      .full .month, .full .week, .full .date {
+        color: #e1bc4b;
+      }
+      .first-full .month, .first-full .date,
+      .full-last .month, .full-last .date {
+        color: #c2b37f;
+      }
+      .first .month, .first .week, .first .date,
+      .last .month, .last .week, .last .date {
+        color: #b6b195;
+      }
+      .new-first .month, .new-first .date,
+      .last-new .month, .last-new .date {
+        color: #9bb1cd;
+      }
+
+      .morning,
+      .afternoon {
+        min-height: 30px;
+      }
+
+      @media screen and (max-width: 1000px) {
+        .cycle {
+          grid-template-columns: repeat(5,1fr) !important;
+          font-size: 2em;
+        }
+        .new-first, .first-full, .full-last, .last-new {
+          display: none;
+        }
+      }
+
+      @media screen and (min-width: 1500px) {
+        .cycle {
+          font-size: 1.5em;
+        }
+      }
+
+      @media screen and (min-width: 2000px) {
+        .cycle {
+          font-size: 2em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="main">
+
+
+
+      <header>
+        <div class="title">
+          <b>{{ year }}</b>
+          Lunar Calendar
+        </div>
+        <nav class="controls">
+          <button class="nav-year this-year" @click="gotoCurrentYear()">{{ currentYear }}</button>
+          <button class="nav-year prev-year" @click="prevYear()">&larr;</button>
+          <input type="number" :min="minYear" :max="maxYear" name="year" id="year-select" class="mono" v-model="sources.moon.apiOptions.year">
+          <button class="nav-year next-year" @click="nextYear()">&rarr;</button>
+          <button type="button" @click="getMoonData()">Fetch <span class="mono">{{ year }}</span></button>
+        </nav>
+      </header>
+      <div class="loading" v-if="! moonPhases">Loading...</div>
+      <div class="error" v-else-if="moonPhases.error">There was an error: {{ moonPhases.type }}</div>
+      <div class="calendar" v-else>
+        <div class="cycle" v-for="cycle in cycles" :style="cycleStyle">
+          <div class="day" v-for="day in cycle"
+            :data-month="day.month"
+            :data-day="day.day"
+            :class="[day.phase, months[day.month], weeks[day.weekDay], {
+              'month-start': day.day == 1,
+              'week-start': day.weekDay == 0,
+              'weekday': day.weekDay < 5
+            }]">
+            <div class="phase">
+            </div>
+            <div class="month">{{ months[day.month] }}</div>
+            <div class="date">{{ day.day }}</div>
+            <div class="morning"></div>
+            <div class="week">{{ weeks[day.weekDay] }}</div>
+            <div class="afternoon"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+<script>
+
+"use strict"
+
+Vue.component("day", {
+  props: ["moon"],
+  template: `
+
+  `,
+  data: function () {
+    return {
+      isSelected: false
+    }
+  },
+  methods: {
+  }
+});
+
+var app = new Vue({
+  el: "#main",
+  data: {
+    currentYear: new Date().getFullYear(),
+    sources: {
+      moon: {
+        name: "Moon Phase",
+        apiURL: "http://api.usno.navy.mil/moon/phase",
+        data: "moonPhases",
+        apiOptions: {
+          year: this.currentYear
+        }
+      }
+    },
+    minYear: 1700,
+    maxYear: 2100,
+    longestCycle: 31,
+    months: ['jan', 'feb', 'mar', 'apr', 'may', 'june', 'july', 'aug', 'sept', 'oct', 'nov', 'dec'],
+    weeks: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+    moonPhases: false,
+    localStorage: 'moonCache',
+    cachedData: {}
+  },
+
+  created: function () {
+    // pull from local storage
+    if ( window.localStorage.moonCache ) {
+      this.cachedData = JSON.parse( window.localStorage.getItem( this.localStorage ))
+      console.log('Local data loaded...', this.cachedData);
+    }
+
+    // if the URL hash is between the min and max used that for year
+    if( window.location.hash.substr(1) > this.minYear && window.location.hash.substr(1) < this.maxYear ) {
+      this.sources.moon.apiOptions.year = window.location.hash.substr(1);
+    }
+
+    // load in data
+    this.getMoonData();
+  },
+
+  methods: {
+    nextYear: function () {
+      this.sources.moon.apiOptions.year++;
+      this.getMoonData();
+    },
+    prevYear: function () {
+      this.sources.moon.apiOptions.year--;
+      this.getMoonData();
+    },
+    gotoCurrentYear: function () {
+      this.sources.moon.apiOptions.year = this.currentYear;
+      this.getMoonData();
+    },
+    setHash: function() {
+      window.location.hash = this.year;
+    },
+    getMoonData: function () {
+      var api = this.sources.moon;
+
+      if (this.cachedData[api.apiOptions.year]) {
+        // fetch from cache
+        this.moonPhases = this.cachedData[api.apiOptions.year]
+        console.log('pulling data from cache', api.apiOptions.year);
+      } else {
+        // fetch new data
+        this.moonPhases = this.fetchData(api);
+        console.log('fetching data from api...', api.apiOptions.year);
+      }
+      this.setHash();
+    },
+    cacheData: function () {
+      if ( this.moonPhases && ! this.cachedData[this.moonPhases.year] ) {
+        this.cachedData[this.moonPhases.year] = this.moonPhases;
+        console.log('adding data to cache', this.moonPhases.year);
+        window.localStorage.setItem( this.localStorage, JSON.stringify( this.cachedData ) );
+        console.log('Adding cache data to local storage...');
+      }
+    },
+    fetchData: function(source) {
+      var xhr = new XMLHttpRequest();
+      var self = this;
+      xhr.open('GET', source.apiURL + serialize(source.apiOptions) )
+      xhr.onload = function() {
+        self[source.data] = JSON.parse(xhr.responseText);
+        console.log('data loaded', source);
+      }
+      xhr.send()
+    }
+  },
+
+  watch: {
+    // whenever moonPhases is updated cache the data
+    moonPhases: function (val, oldVal) {
+      this.cacheData();
+    },
+  },
+
+  computed: {
+    year: function () {
+      return this.sources.moon.apiOptions.year
+    },
+    cycleStyle: function () {
+      return {
+        gridTemplateColumns: 'repeat(' + this.longestCycle + ', 1fr)'
+      }
+    },
+    newMoons: function () {
+      var out = [];
+      for (var i = 0; i < this.moonPhases.length; i++) {
+        if ('New Moon' === this.moonPhases[i].phase) {
+          out.push(this.moonPhases[i]);
+        }
+      }
+      return out;
+    },
+    cycles: function () {
+      var out = [],
+          moonPhases = this.moonPhases.phasedata,
+          start = moonPhases[0],
+          end = moonPhases[moonPhases.length - 1],
+          date = new Date(start.date),
+          endDate = new Date(end.date),
+          cycle = [],
+          nextPhase = 'new-first',
+          i = 0;
+
+      while (date <= endDate) {
+        var day = {
+          date: new Date(date.getTime()),
+          day: date.getDate(),
+          weekDay: date.getDay(),
+          month: date.getMonth(),
+          year: date.getFullYear(),
+          phase: 'none',
+          morning: null,
+          afternoon: null,
+          evening: null
+        };
+
+        var phaseDate = new Date(moonPhases[i].date);
+
+        if ( phaseDate.getTime() == date.getTime() ) {
+          switch (moonPhases[i].phase) {
+            case "New Moon":
+              day.phase = 'new';
+              nextPhase = 'new-first';
+              break;
+            case "First Quarter":
+              day.phase = 'first';
+              nextPhase = 'first-full';
+              break;
+            case "Full Moon":
+              day.phase = 'full';
+              nextPhase = 'full-last';
+              break;
+            case "Last Quarter":
+              day.phase = 'last';
+              nextPhase = 'last-new';
+              break;
+            default:
+          }
+
+          if ( "New Moon" == moonPhases[i].phase) {
+            if (i > 0 && cycle[0].phase == 'new') {
+              cycle.push(day);
+              out.push(cycle);
+            }
+            // mesure cycle
+            this.longestCycle = (cycle.length > this.longestCycle) ? cycle.length : this.longestCycle;
+            // reset cycle
+            cycle = [];
+          }
+
+          i++; // move to next moon phase
+        } else {
+          // not a moon phase
+          day.phase = nextPhase;
+        }
+
+        cycle.push(day);
+        date.setDate(date.getDate() + 1);
+      }
+
+      return out;
+    }
+  },
+});
+
+window.addEventListener('keyup', function(e) {
+  var key = e.keyCode ? e.keyCode : e.which;
+
+  if (key == 37) { // left
+    app.prevYear();
+  } else if (key == 39) { // right
+    app.nextYear();
+  }
+});
+
+function serialize( obj ) {
+  return '?' + Object.keys(obj).reduce(function(a,k) {
+    a.push(k+'='+encodeURIComponent(obj[k]));return a },
+    []).join('&')
+}
+
+Date.prototype.addDay = function() {
+    this.setDate(this.getDate() + 1);
+}
+
+
+</script>
+
+    </body>
+  </html>
