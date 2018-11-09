@@ -394,13 +394,7 @@ var app = new Vue({
       } else {
         // fetch new data
         console.log('fetching data from api...', api.apiOptions.year);
-        var data = this.fetchData(api);
-        if ( data ) {
-          this.moonPhases = data;
-        } else {
-          this.setError('No data was returned by the API...');
-          console.log('No data returned', data );
-        }
+        this.moonPhases = this.fetchData(api);
       }
       this.setHash();
     },
