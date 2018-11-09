@@ -30,11 +30,15 @@
       }
       body {
         background-color: #192538;
+        background-image: linear-gradient(to right, #0005 0%, #192538ff 50%, #0005 100%);
         color: #80aff9;
         font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
         font-weight: 400;
         line-height: 1.5;
         min-height: 100vh;
+      }
+      a {
+        color: inherit;
       }
       button {
         border: none;
@@ -55,14 +59,15 @@
         line-height: 1.5;
         font-size: 0.8em;
       }
-      button:hover {
+      button:hover,
+      a:hover {
         color: #e1bc4b;
       }
       input {
         border: 1px solid #80aff955;
         background-color: #09101b;
         color: #80aff9;
-        padding: 2px 0 2px 15px;
+        padding: 2px 15px;
         line-height: 1.5;
         font-size: 0.8em;
       }
@@ -72,12 +77,18 @@
       .mono {
         font-family: monospace;
       }
-      header {
+      header,
+      footer {
+        background-color: #192538;
         display: flex;
         justify-content: space-between;
         padding: 0.5em;
       }
       .controls {
+      }
+      .error {
+        font-family: monospace;
+        padding: 1em;
       }
       .loading {
         padding: 1em;
@@ -85,16 +96,42 @@
         text-transform: uppercase;
         letter-spacing: 12px;
       }
-      .loading:before {
+      .loading .spinner {
+        letter-spacing: 0;
+        display: inline-block;
+        position: relative;
+        width: 25px;
+        height: 36px;
+        margin: 10px 20px;
+      }
+      .loading .spinner:after {
         content: "🌝";
+        animation-name: spin;
+        animation-duration: 4000ms;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        font-size: 12px;
+        position: absolute;
+        left: -17px;
+        width: 60px;
+        height: 60px;
+        top: -12px;
+      }
+      @keyframes spin {
+        from {
+          transform:rotate(0deg);
+        }
+        to {
+          transform:rotate(360deg);
+        }
       }
       .calendar {
         border-top: 1px solid #80aff933;
+        border-bottom: 1px solid #80aff933;
       }
       .cycle {
         display: grid;
         grid-template-columns: repeat(31,1fr);
-        background-image: linear-gradient(to right, #0005 0%, #192538ff 50%, #0005 100%);
       }
       .day {
         border-right: 1px solid #80aff933;
@@ -194,6 +231,9 @@
           font-size: 2em;
         }
       }
+      [v-cloak] {
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -204,20 +244,27 @@
 
       <header>
         <div class="title">
-          <b>{{ year }}</b>
+          <b v-cloak>{{ year }}</b>
           Lunar Calendar
         </div>
-        <nav class="controls">
+        <nav class="controls" v-cloak>
           <button class="nav-year this-year" @click="gotoCurrentYear()">{{ currentYear }}</button>
           <button class="nav-year prev-year" @click="prevYear()">&larr;</button>
           <input type="number" :min="minYear" :max="maxYear" name="year" id="year-select" class="mono" v-model="sources.moon.apiOptions.year">
           <button class="nav-year next-year" @click="nextYear()">&rarr;</button>
-          <button type="button" @click="getMoonData()">Fetch <span class="mono">{{ year }}</span></button>
+          <button type="button" @click="getMoonData()">Fetch <span class="mono">{{ sources.moon.apiOptions.year }}</span></button>
         </nav>
       </header>
-      <div class="loading" v-if="! moonPhases">Loading...</div>
-      <div class="error" v-else-if="moonPhases.error">There was an error: {{ moonPhases.type }}</div>
-      <div class="calendar" v-else>
+      <div class="loading" v-if="! moonPhases">
+        <span class="spinner">🌍</span>
+        Loading...
+      </div>
+      <div class="error" v-else-if="moonPhases.error" v-cloak>
+        ❌ {{ moonPhases.type }}
+        <br>
+        If this error persits please contact me: <a href="mailto:drew@good.coop">Drew@good.coop</a>
+      </div>
+      <div class="calendar" v-else v-cloak>
         <div class="cycle" v-for="cycle in cycles" :style="cycleStyle">
           <div class="day" v-for="day in cycle"
             :data-month="day.month"
@@ -239,6 +286,16 @@
       </div>
 
     </div>
+
+    <footer>
+      <div class="credit">
+        © Drew Hornbein 2018 -
+        <a href="mailto:drew@good.coop">email</a> /
+        <a href="//twitter.com/hornbein">twitter</a> //
+        <a href="https://github.com/dhornbein/dark-moon-rising">Issues and code on github.com</a>
+      </div>
+      <div class="source">Lunar data provided by the <a href="http://aa.usno.navy.mil/data/docs/api.php#phase">United States Naval Observatory</a></div>
+    </footer>
 
 <script>
 
@@ -262,17 +319,19 @@ var app = new Vue({
   el: "#main",
   data: {
     currentYear: new Date().getFullYear(),
+    displayYear: null,
     sources: {
       moon: {
         name: "Moon Phase",
         apiURL: "http://api.usno.navy.mil/moon/phase",
         data: "moonPhases",
         apiOptions: {
-          year: this.currentYear
+          year: new Date().getFullYear()
         }
       }
     },
     minYear: 1700,
+    hash: window.location.hash,
     maxYear: 2100,
     longestCycle: 31,
     months: ['jan', 'feb', 'mar', 'apr', 'may', 'june', 'july', 'aug', 'sept', 'oct', 'nov', 'dec'],
@@ -312,7 +371,11 @@ var app = new Vue({
       this.getMoonData();
     },
     setHash: function() {
-      window.location.hash = this.year;
+      if( this.year > this.minYear && this.year < this.maxYear ) {
+        window.location.hash = this.year;
+      } else {
+        window.location.hash = '';
+      }
     },
     getMoonData: function () {
       var api = this.sources.moon;
@@ -339,12 +402,21 @@ var app = new Vue({
     fetchData: function(source) {
       var xhr = new XMLHttpRequest();
       var self = this;
-      xhr.open('GET', source.apiURL + serialize(source.apiOptions) )
+      xhr.open('GET', source.apiURL + serialize(source.apiOptions) );
       xhr.onload = function() {
         self[source.data] = JSON.parse(xhr.responseText);
-        console.log('data loaded', source);
+        console.log('data loaded', xhr.status, source);
+      };
+      xhr.onerror = function () {
+        self.setError('There was an error connecting to the data api! Status Code: ' + xhr.status + ' Message: ' + xhr.statusText );
+      };
+      xhr.send(null);
+    },
+    setError: function ( msg ) {
+      this.moonPhases = {
+        error: true,
+        type: msg
       }
-      xhr.send()
     }
   },
 
@@ -352,12 +424,12 @@ var app = new Vue({
     // whenever moonPhases is updated cache the data
     moonPhases: function (val, oldVal) {
       this.cacheData();
-    },
+    }
   },
 
   computed: {
     year: function () {
-      return this.sources.moon.apiOptions.year
+      return (this.moonPhases) ? this.moonPhases.year : this.sources.moon.apiOptions.year ;
     },
     cycleStyle: function () {
       return {
