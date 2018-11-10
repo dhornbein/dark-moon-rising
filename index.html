@@ -406,7 +406,7 @@ var app = new Vue({
       } else {
         // fetch new data
         console.log('fetching data from api...', year);
-        this.moonPhases = this.fetchData(api);
+        this.fetchData(api);
       }
       this.setHash();
     },
@@ -432,7 +432,7 @@ var app = new Vue({
       xhr.open('GET', url );
       xhr.onload = function() {
         self[source.data] = JSON.parse(xhr.responseText);
-        console.log('data loaded', xhr.status, source);
+        console.log('data loaded from: ', url, xhr.status, source);
       };
       xhr.onerror = function () {
         self.setError('There was an error connecting to the data api! Status Code: ' + xhr.status + ' Message: ' + xhr.statusText );
