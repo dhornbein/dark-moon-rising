@@ -91,11 +91,29 @@
         justify-content: space-between;
         padding: 0.5em;
       }
+      @media screen and (max-width: 600px) {
+        header {
+          align-items: center;
+        }
+        header, footer {
+          flex-direction: column;
+        }
+      }
       .controls {
       }
       .error {
         font-family: monospace;
         padding: 1em;
+      }
+      .loader {
+        font-family: monospace;
+      }
+      .loader .spinner {
+        display: inline-block;
+        animation-name: spin;
+        animation-duration: 2000ms;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
       }
       .loading {
         padding: 1em;
@@ -294,6 +312,7 @@
           <b v-cloak>{{ year }}</b>
           Lunar Calendar
         </div>
+        <div class="loader" v-if="loading"><span class="spinner">🌒</span> loading {{ sources.moon.apiOptions.year }}...</div>
         <nav class="controls" v-cloak>
           <button class="nav-year this-year" @click="gotoCurrentYear()">{{ currentYear }}</button>
           <button class="nav-year prev-year" @click="prevYear()">&larr;</button>
@@ -393,6 +412,7 @@ var app = new Vue({
     weeks: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
     moonPhases: false,
     localStorage: 'moonCache',
+    loading: false,
     cachedData: {}
   },
 
@@ -439,6 +459,10 @@ var app = new Vue({
       if ( year == this.moonPhases.year ) {
         console.log('year already on display...');
         return null;
+      } else if ( year < this.minYear || year > this.maxYear ) {
+        this.setError( 'Year must be between ' + this.minYear + ' and ' + this.maxYear );
+        console.log('Year out of range');
+        return null;
       }
 
       if (this.cachedData[year]) {
@@ -450,6 +474,7 @@ var app = new Vue({
         console.log('fetching data from api...', year);
         this.fetchData(api);
       }
+
       this.setHash();
     },
     cacheData: function () {
@@ -471,15 +496,32 @@ var app = new Vue({
         url = this.cors + url;
       }
 
-      xhr.open('GET', url );
+      this.loading = true;
+      xhr.addEventListener("progress", updateProgress);
+
+      xhr.open( 'GET', url );
       xhr.onload = function() {
-        self[source.data] = JSON.parse(xhr.responseText);
-        console.log('data loaded from: ', url, xhr.status, source);
+        self.loading = false;
+        self.loadData( xhr );
       };
       xhr.onerror = function () {
         self.setError('There was an error connecting to the data api! Status Code: ' + xhr.status + ' Message: ' + xhr.statusText );
       };
       xhr.send(null);
+    },
+    loadData: function ( xhr ) {
+      var data = JSON.parse( xhr.responseText );
+
+      if ( undefined !== data ) {
+        if ( data.error ) {
+          this.setError( data.type );
+        } else {
+          this.moonPhases = data;
+          console.log('data loaded into app from: ', xhr.responseURL, xhr );
+        }
+      } else {
+        console.log('loaded data is undefined!', xhr );
+      }
     },
     setError: function ( msg ) {
       this.moonPhases = {
@@ -622,6 +664,9 @@ Date.prototype.addDay = function() {
     this.setDate(this.getDate() + 1);
 }
 
+function updateProgress(e){
+  console.log(e.loaded);
+}
 
 </script>
 
