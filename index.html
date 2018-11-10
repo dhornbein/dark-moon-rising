@@ -146,7 +146,47 @@
         text-align: center;
         position: relative;
       }
+      .day:hover {
+        transform: scale(1.5);
+        z-index: 1;
+        position: relative;
+        background-color: #192538;
+        border: 1px solid #e1bc4b33;
+        margin: -1px;
+        box-shadow: 1px 4px 8px 2px #0008;
+        transition: transform 100ms ease-in,box-shadow 100ms ease-in;
+      }
+      .day:hover .phase { position: relative; }
+      .day:hover .phase:after {
+        position: absolute;
+        width: 300px;
+        left: calc(50% - 150px);
+        font-size: 50px;
+        bottom: 0;
+        line-height: 1;
+        transition: font-size 100ms ease-out 100ms;
+      }
+      .day.full:hover .phase:after { text-shadow: 0 0 20px #e1bc4baa; }
+      .day.first-full:hover .phase:after,
+      .day.full-last:hover .phase:after { text-shadow: 0 0 20px #e1bc4b88; }
+      .day.first:hover .phase:after,
+      .day.last:hover .phase:after { text-shadow: 0 0 20px #e1bc4b44; }
+      .day.new-first:hover .phase:after,
+      .day.last-new:hover .phase:after { text-shadow: 0 0 20px #e1bc4b22; }
+      .cycle:first-child .day:hover             { transform-origin: top; }
+      .cycle:first-child .day:first-child:hover { transform-origin: top left; }
+      .cycle:first-child .day:last-child:hover  { transform-origin: top right; }
+      .day:first-child:hover                    { transform-origin: left; }
+      .day:last-child:hover                     { transform-origin: right; }
+      .cycle:last-child .day:hover              { transform-origin: bottom; }
+      .cycle:last-child .day:first-child:hover  { transform-origin: bottom left; }
+      .cycle:last-child .day:last-child:hover   { transform-origin: bottom right; }
 
+      .day.today .date {
+        background-color: #80aff933;
+      }
+
+      .day:hover.month-start:before { content: unset; }
       .day.month-start:before {
         content: "";
         height: calc(100% - 10px);
@@ -279,7 +319,8 @@
             :class="[day.phase, months[day.month], weeks[day.weekDay], {
               'month-start': day.day == 1,
               'week-start': day.weekDay == 0,
-              'weekday': day.weekDay < 5
+              'weekday': day.weekDay < 5,
+              'today': day.date.toDateString() == today
             }]">
             <div class="phase">
             </div>
@@ -331,6 +372,7 @@ var app = new Vue({
   el: "#main",
   data: {
     currentYear: new Date().getFullYear(),
+    today: new Date().toDateString(),
     displayYear: null,
     sources: {
       moon: {
