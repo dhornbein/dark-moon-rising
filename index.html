@@ -257,7 +257,7 @@
         <nav class="controls" v-cloak>
           <button class="nav-year this-year" @click="gotoCurrentYear()">{{ currentYear }}</button>
           <button class="nav-year prev-year" @click="prevYear()">&larr;</button>
-          <input type="number" :min="minYear" :max="maxYear" name="year" id="year-select" class="mono" v-model="sources.moon.apiOptions.year">
+          <input type="number" :min="minYear" :max="maxYear" name="year" id="year-select" class="mono" v-model="sources.moon.apiOptions.year" @keyup.enter="getMoonData()">
           <button class="nav-year next-year" @click="nextYear()">&rarr;</button>
           <button type="button" @click="getMoonData()">Fetch <span class="mono">{{ sources.moon.apiOptions.year }}</span></button>
         </nav>
@@ -330,13 +330,14 @@ var app = new Vue({
     sources: {
       moon: {
         name: "Moon Phase",
-        apiURL: "https://cors-anywhere.herokuapp.com/http://api.usno.navy.mil/moon/phase",
+        apiURL: "http://api.usno.navy.mil/moon/phase",
         data: "moonPhases",
         apiOptions: {
           year: new Date().getFullYear()
         }
       }
     },
+    cors: 'https://crossorigin.me/',
     minYear: 1700,
     hash: window.location.hash,
     maxYear: 2100,
@@ -385,15 +386,21 @@ var app = new Vue({
       }
     },
     getMoonData: function () {
-      var api = this.sources.moon;
+      var api = this.sources.moon,
+          year = api.apiOptions.year;
 
-      if (this.cachedData[api.apiOptions.year]) {
+      if ( year == this.moonPhases.year ) {
+        console.log('year already on display...');
+        return null;
+      }
+
+      if (this.cachedData[year]) {
         // fetch from cache
-        this.moonPhases = this.cachedData[api.apiOptions.year]
-        console.log('pulling data from cache', api.apiOptions.year);
+        this.moonPhases = this.cachedData[year]
+        console.log('pulling data from cache', year);
       } else {
         // fetch new data
-        console.log('fetching data from api...', api.apiOptions.year);
+        console.log('fetching data from api...', year);
         this.moonPhases = this.fetchData(api);
       }
       this.setHash();
@@ -407,9 +414,17 @@ var app = new Vue({
       }
     },
     fetchData: function(source) {
-      var xhr = new XMLHttpRequest();
-      var self = this;
-      xhr.open('GET', source.apiURL + serialize(source.apiOptions) );
+      var xhr = new XMLHttpRequest(),
+          self = this,
+          url = source.apiURL + serialize( source.apiOptions );
+
+      // add cors anywhere service
+      if (location.protocol == 'https:') {
+        console.log('using cors anywhere...');
+        url = this.cors + url;
+      }
+
+      xhr.open('GET', url );
       xhr.onload = function() {
         self[source.data] = JSON.parse(xhr.responseText);
         console.log('data loaded', xhr.status, source);
