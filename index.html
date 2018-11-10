@@ -405,7 +405,6 @@ var app = new Vue({
     },
     cors: 'https://crossorigin.me/',
     minYear: 1700,
-    hash: window.location.hash,
     maxYear: 2100,
     longestCycle: 31,
     months: ['jan', 'feb', 'mar', 'apr', 'may', 'june', 'july', 'aug', 'sept', 'oct', 'nov', 'dec'],
@@ -446,10 +445,8 @@ var app = new Vue({
       this.getMoonData();
     },
     setHash: function() {
-      if( this.year > this.minYear && this.year < this.maxYear ) {
-        window.location.hash = this.year;
-      } else {
-        window.location.hash = '';
+      if ( this.moonPhases.year ) {
+        window.location.hash = this.moonPhases.year;
       }
     },
     getMoonData: function () {
@@ -469,13 +466,13 @@ var app = new Vue({
         // fetch from cache
         this.moonPhases = this.cachedData[year]
         console.log('pulling data from cache', year);
+        this.setHash();
       } else {
         // fetch new data
         console.log('fetching data from api...', year);
         this.fetchData(api);
       }
 
-      this.setHash();
     },
     cacheData: function () {
       if ( this.moonPhases && ! this.cachedData[this.moonPhases.year] ) {
@@ -518,6 +515,7 @@ var app = new Vue({
         } else {
           this.moonPhases = data;
           console.log('data loaded into app from: ', xhr.responseURL, xhr );
+          this.setHash();
         }
       } else {
         console.log('loaded data is undefined!', xhr );
