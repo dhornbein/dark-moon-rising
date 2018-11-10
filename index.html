@@ -486,6 +486,15 @@ var app = new Vue({
         error: true,
         type: msg
       }
+    },
+    parsePhaseDate: function ( raw ) {
+      // 2018 Jan 03
+      var date = raw.toLowerCase().split(' '),
+          months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+      date[1] = months.indexOf( date[1] ) + 1;
+      if ( date[1] < 10 ) date[1] = "0" + date[1];
+      return date.join('-');
     }
   },
 
@@ -517,10 +526,10 @@ var app = new Vue({
     cycles: function () {
       var out = [],
           moonPhases = this.moonPhases.phasedata,
-          start = moonPhases[0],
-          end = moonPhases[moonPhases.length - 1],
-          date = new Date(start.date),
-          endDate = new Date(end.date),
+          start = this.parsePhaseDate(moonPhases[0].date),
+          end = this.parsePhaseDate(moonPhases[moonPhases.length - 1].date),
+          date = new Date(start),
+          endDate = new Date(end),
           cycle = [],
           nextPhase = 'new-first',
           i = 0;
@@ -538,9 +547,15 @@ var app = new Vue({
           evening: null
         };
 
-        var phaseDate = new Date(moonPhases[i].date);
+        var phaseDate = new Date( this.parsePhaseDate( moonPhases[i].date ) );
 
-        if ( phaseDate.getTime() == date.getTime() ) {
+        if (phaseDate == "Invalid Date") {
+          console.log(day,moonPhases[i].date,this.parsePhaseDate( moonPhases[i].date ));
+          break;
+        }
+
+        if ( phaseDate.toDateString() == date.toDateString() ) {
+
           switch (moonPhases[i].phase) {
             case "New Moon":
               day.phase = 'new';
