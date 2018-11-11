@@ -335,6 +335,7 @@
           <div class="day" v-for="day in cycle"
             :data-month="day.month"
             :data-day="day.day"
+            :data-weekday="day.weekDay"
             :class="[day.phase, months[day.month], weeks[day.weekDay], {
               'month-start': day.day == 1,
               'week-start': day.weekDay == 0,
@@ -363,9 +364,9 @@
         <a href="https://github.com/dhornbein/dark-moon-rising">Issues and code on github.com</a>
       </div>
       <div class="source">
-        Lunar data provided by the <a href="http://aa.usno.navy.mil/data/docs/api.php#phase">United States Naval Observatory</a>
+        Lunar data provided by the
         <br>
-        Special thanks to <a href="https://twitter.com/corsproxy">@corsproxy</a>
+        <a href="http://aa.usno.navy.mil/data/docs/api.php#phase">United States Naval Observatory</a>
       </div>
     </footer>
 
@@ -408,7 +409,7 @@ var app = new Vue({
     maxYear: 2100,
     longestCycle: 31,
     months: ['jan', 'feb', 'mar', 'apr', 'may', 'june', 'july', 'aug', 'sept', 'oct', 'nov', 'dec'],
-    weeks: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+    weeks: ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
     moonPhases: false,
     localStorage: 'moonCache',
     loading: false,
