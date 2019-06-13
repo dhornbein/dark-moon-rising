@@ -339,7 +339,7 @@
             :class="[day.phase, months[day.month], weeks[day.weekDay], {
               'month-start': day.day == 1,
               'week-start': day.weekDay == 0,
-              'weekday': day.weekDay < 5,
+              'weekday': day.weekDay > 0 && day.weekDay < 5,
               'today': day.date.toDateString() == today
             }]">
             <div class="phase">
