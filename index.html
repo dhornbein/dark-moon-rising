@@ -404,7 +404,6 @@ var app = new Vue({
         }
       }
     },
-    cors: 'https://crossorigin.me/',
     minYear: 1700,
     maxYear: 2100,
     longestCycle: 31,
@@ -487,12 +486,6 @@ var app = new Vue({
       var xhr = new XMLHttpRequest(),
           self = this,
           url = source.apiURL + serialize( source.apiOptions );
-
-      // add cors anywhere service
-      if (location.protocol == 'https:') {
-        console.log('using cors anywhere...');
-        url = this.cors + url;
-      }
 
       this.loading = true;
       xhr.addEventListener("progress", updateProgress);
