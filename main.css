@@ -1,0 +1,283 @@
+html {
+    background-color: #fff;
+    font-size: 16px;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    min-width: 300px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+body {
+    background-color: #192538;
+    background-image: linear-gradient(to right, #0005 0%, #192538ff 50%, #0005 100%);
+    color: #80aff9;
+    font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    min-height: 100vh;
+}
+a {
+    color: inherit;
+}
+button {
+    border: none;
+    margin: 0;
+    width: auto;
+    overflow: visible;
+    background: transparent;
+    color: inherit;
+    line-height: normal;
+    -webkit-font-smoothing: inherit;
+    -moz-osx-font-smoothing: inherit;
+    -webkit-appearance: none;
+
+    cursor: pointer;
+    background: #09101b;
+    border-radius: 3px;
+    padding: 2px 10px;
+    line-height: 1.5;
+    font-size: 0.8em;
+}
+    button:hover,
+a:hover {
+    color: #e1bc4b;
+}
+input {
+    border: 1px solid #80aff955;
+    background-color: #09101b;
+    color: #80aff9;
+    padding: 2px 15px;
+    line-height: 1.5;
+    font-size: 0.8em;
+}
+.nav-year {
+    font-weight: bold;
+}
+.mono {
+    font-family: monospace;
+}
+    header,
+footer {
+    background-color: #192538;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5em;
+}
+@media screen and (max-width: 600px) {
+    header {
+        align-items: center;
+    }
+    header, footer {
+        flex-direction: column;
+    }
+}
+.controls {
+}
+.error {
+    font-family: monospace;
+    padding: 1em;
+}
+.loader {
+    font-family: monospace;
+}
+.loader .spinner {
+    display: inline-block;
+    animation-name: spin;
+    animation-duration: 2000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+.loading {
+    padding: 1em;
+    font-size: 1.5em;
+    text-transform: uppercase;
+    letter-spacing: 12px;
+}
+.loading .spinner {
+    letter-spacing: 0;
+    display: inline-block;
+    position: relative;
+    width: 25px;
+    height: 36px;
+    margin: 10px 20px;
+}
+.loading .spinner:after {
+    content: "🌝";
+    animation-name: spin;
+    animation-duration: 4000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    font-size: 12px;
+    position: absolute;
+    left: -17px;
+    width: 60px;
+    height: 60px;
+    top: -12px;
+}
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
+}
+.calendar {
+    border-top: 1px solid #80aff933;
+    border-bottom: 1px solid #80aff933;
+}
+.cycle {
+    display: grid;
+    grid-template-columns: repeat(31,1fr);
+}
+.day {
+    border-right: 1px solid #80aff933;
+    padding: 5px 0;
+    text-align: center;
+    position: relative;
+}
+.day:hover {
+    transform: scale(1.5);
+    z-index: 1;
+    position: relative;
+    background-color: #192538;
+    border: 1px solid #e1bc4b33;
+    margin: -1px;
+    box-shadow: 1px 4px 8px 2px #0008;
+    transition: transform 100ms ease-in,box-shadow 100ms ease-in;
+}
+.day:hover .phase { position: relative; }
+.day:hover .phase:after {
+    position: absolute;
+    width: calc( 100% * 1.5 );
+    left: calc(50% - (50% * 1.5));
+    font-size: 50px;
+    bottom: 0;
+    line-height: 1;
+    transition: font-size 100ms ease-out 100ms;
+}
+.day.full:hover .phase:after                { text-shadow: 0 0 20px #e1bc4baa; }
+.day.first-full:hover .phase:after,
+.day.full-last:hover .phase:after           { text-shadow: 0 0 20px #e1bc4b88; }
+.day.first:hover .phase:after,
+.day.last:hover .phase:after                { text-shadow: 0 0 20px #e1bc4b44; }
+.day.new-first:hover .phase:after,
+.day.last-new:hover .phase:after            { text-shadow: 0 0 20px #e1bc4b22; }
+.cycle:first-child .day:hover               { transform-origin: top; }
+.cycle:first-child .day:first-child:hover   { transform-origin: top left; }
+.cycle:first-child .day:last-child:hover    { transform-origin: top right; }
+.day:first-child:hover                      { transform-origin: left; }
+.day:last-child:hover                       { transform-origin: right; }
+.cycle:last-child .day:hover                { transform-origin: bottom; }
+.cycle:last-child .day:first-child:hover    { transform-origin: bottom left; }
+.cycle:last-child .day:last-child:hover     { transform-origin: bottom right; }
+
+.day.today .date {
+    background-color: #80aff933;
+}
+
+.day:hover.month-start:before { content: unset; }
+.day.month-start:before {
+    content: "";
+    height: calc(100% - 10px);
+    position: absolute;
+    border-left: 1px solid;
+    left: 0px;
+    opacity: 0.5;
+}
+
+.new .phase:after {
+    content: "🌑";
+}
+.new-first .phase:after {
+    content: "🌒";
+}
+.first .phase:after {
+    content: "🌓";
+}
+.first-full .phase:after {
+    content: "🌔";
+}
+.full .phase:after {
+    content: "🌕";
+}
+.full-last .phase:after {
+    content: "🌖";
+}
+.last .phase:after {
+    content: "🌗";
+}
+.last-new .phase:after {
+    content: "🌘";
+}
+
+.phase {
+    height: 1.5em;
+}
+    .month,
+.week {
+    font-size: 0.6em;
+    text-transform: uppercase;
+}
+.day.weekday .week {
+    font-weight: bold;
+}
+.date {
+    font-weight: bold;
+}
+
+.full .month, .full .week, .full .date {
+    color: #e1bc4b;
+}
+    .first-full .month, .first-full .date,
+.full-last .month, .full-last .date {
+    color: #c2b37f;
+}
+    .first .month, .first .week, .first .date,
+.last .month, .last .week, .last .date {
+    color: #b6b195;
+}
+    .new-first .month, .new-first .date,
+.last-new .month, .last-new .date {
+    color: #9bb1cd;
+}
+
+    .morning,
+.afternoon {
+    min-height: 30px;
+}
+
+@media screen and (max-width: 1000px) {
+    .cycle {
+        grid-template-columns: repeat(5,1fr) !important;
+        font-size: 2em;
+    }
+    .new-first, .first-full, .full-last, .last-new {
+        display: none;
+    }
+}
+
+@media screen and (min-width: 1500px) {
+    .cycle {
+        font-size: 1.5em;
+    }
+}
+
+@media screen and (min-width: 2000px) {
+    .cycle {
+        font-size: 2em;
+    }
+}
+[v-cloak] {
+    display: none;
+}
