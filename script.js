@@ -169,6 +169,7 @@ var app = new Vue({
             return (this.moonPhases) ? this.moonPhases.year : this.sources.moon.apiOptions.year;
         },
         cycleStyle: function () {
+            if (31 === this.longestCycle) return null;
             return {
                 gridTemplateColumns: 'repeat(' + this.longestCycle + ', 1fr)'
             }
@@ -199,6 +200,7 @@ var app = new Vue({
                     day: date.getDate(),
                     weekDay: date.getDay(),
                     month: date.getMonth(),
+                    time: false,
                     year: date.getFullYear(),
                     phase: 'none',
                     morning: null,
@@ -236,7 +238,10 @@ var app = new Vue({
                     }
 
                     day.date = new Date(phaseDate);
-                    day.time = day.date.getHours() + ':' + day.date.getMinutes()
+                    day.time = {
+                        hours: day.date.getHours(),
+                        minutes: (day.date.getMinutes() < 10 ? '0' : '') + day.date.getMinutes()
+                    };
 
                     // if it's a new moon, start the new phase
                     if (0 == moonPhases[i].Phase) {

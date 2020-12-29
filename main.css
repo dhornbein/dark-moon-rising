@@ -252,9 +252,17 @@ footer {
     color: #9bb1cd;
 }
 
-    .morning,
+.morning,
 .afternoon {
     min-height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.day time {
+    font-size: 0.8rem;
+    font-family: 'Courier New', Courier, monospace;
 }
 
 @media screen and (max-width: 1000px) {
@@ -264,6 +272,16 @@ footer {
     }
     .new-first, .first-full, .full-last, .last-new {
         display: none;
+    }
+}
+
+@media screen and (min-width: 1001px) {
+    .new .phase:after,
+    .first .phase:after,
+    .full .phase:after,
+    .last .phase:after {
+        font-size: 1.3em;
+        line-height: 0.5;
     }
 }
 

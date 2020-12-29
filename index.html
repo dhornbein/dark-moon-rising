@@ -52,6 +52,7 @@
             :data-month="day.month"
             :data-day="day.day"
             :data-weekday="day.weekDay"
+            :data-time="day.time ? day.time.hours + ':' + day.time.minutes : false"
             :class="[day.phase, months[day.month], weeks[day.weekDay], {
               'month-start': day.day == 1,
               'week-start': day.weekDay == 0,
@@ -62,9 +63,13 @@
             </div>
             <div class="month">{{ months[day.month] }}</div>
             <div class="date">{{ day.day }}</div>
-            <div class="morning"></div>
+            <div class="morning">
+              <time :datetime="day.time.hours + ':' + day.time.minutes" v-if="day.time && day.time.hours <= 12">{{ day.time.hours + ':' + day.time.minutes }}</time>
+            </div>
             <div class="week">{{ weeks[day.weekDay] }}</div>
-            <div class="afternoon"></div>
+            <div class="afternoon">
+              <time :datetime="day.time.hours + ':' + day.time.minutes" v-if="day.time && day.time.hours > 12">{{ day.time.hours + ':' + day.time.minutes }}</time>
+            </div>
           </div>
         </div>
       </div>
