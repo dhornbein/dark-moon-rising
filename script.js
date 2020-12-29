@@ -253,7 +253,7 @@ var app = new Vue({
                     i++; // move to next moon phase
                 } else {
                     // not a moon phase
-                    day.Phase = nextPhase;
+                    day.phase = nextPhase;
                 }
 
                 cycle.push(day);
