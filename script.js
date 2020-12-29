@@ -23,7 +23,7 @@ var app = new Vue({
         sources: {
             moon: {
                 name: "Moon Phase",
-                apiURL: "https://api.usno.navy.mil/moon/phase",
+                apiURL: "https://craigchamberlain.github.io/moon-data/api/moon-phase-data/",
                 data: "moonPhases",
                 apiOptions: {
                     year: new Date().getFullYear()
@@ -111,7 +111,7 @@ var app = new Vue({
         fetchData: function (source) {
             var xhr = new XMLHttpRequest(),
                 self = this,
-                url = source.apiURL + serialize(source.apiOptions);
+                url = source.apiURL + source.apiOptions.year;
 
             this.loading = true;
             xhr.addEventListener("progress", updateProgress);
@@ -119,24 +119,23 @@ var app = new Vue({
             xhr.open('GET', url);
             xhr.onload = function () {
                 self.loading = false;
-                self.loadData(xhr);
+                self.loadData(xhr, source.apiOptions.year);
             };
             xhr.onerror = function () {
                 self.setError('There was an error connecting to the data api! Status Code: ' + xhr.status + ' Message: ' + xhr.statusText);
             };
             xhr.send(null);
         },
-        loadData: function (xhr) {
+        loadData: function (xhr, year) {
             var data = JSON.parse(xhr.responseText);
 
             if (undefined !== data) {
-                if (data.error) {
-                    this.setError(data.type);
-                } else {
-                    this.moonPhases = data;
-                    console.log('data loaded into app from: ', xhr.responseURL, xhr);
-                    this.setHash();
-                }
+                this.moonPhases = {
+                    year: year,
+                    phasedata: data
+                };
+                console.log('data loaded into app from: ', xhr.responseURL, xhr);
+                this.setHash();
             } else {
                 console.log('loaded data is undefined!', xhr);
             }
@@ -177,7 +176,7 @@ var app = new Vue({
         newMoons: function () {
             var out = [];
             for (var i = 0; i < this.moonPhases.length; i++) {
-                if ('New Moon' === this.moonPhases[i].phase) {
+                if (0 === this.moonPhases[i].Phase) {
                     out.push(this.moonPhases[i]);
                 }
             }
@@ -186,8 +185,8 @@ var app = new Vue({
         cycles: function () {
             var out = [],
                 moonPhases = this.moonPhases.phasedata,
-                start = this.parsePhaseDate(moonPhases[0].date),
-                end = this.parsePhaseDate(moonPhases[moonPhases.length - 1].date),
+                start = moonPhases[0].Date + 'Z',
+                end = moonPhases[moonPhases.length - 1].Date + 'Z',
                 date = new Date(start),
                 endDate = new Date(end),
                 cycle = [],
@@ -196,7 +195,7 @@ var app = new Vue({
 
             while (date <= endDate) {
                 var day = {
-                    date: new Date(date.getTime()),
+                    date: new Date(date),
                     day: date.getDate(),
                     weekDay: date.getDay(),
                     month: date.getMonth(),
@@ -207,36 +206,40 @@ var app = new Vue({
                     evening: null
                 };
 
-                var phaseDate = new Date(this.parsePhaseDate(moonPhases[i].date));
+                var phaseDate = new Date(moonPhases[i].Date + 'Z');
 
                 if (phaseDate == "Invalid Date") {
-                    console.log(day, moonPhases[i].date, this.parsePhaseDate(moonPhases[i].date));
+                    console.log(day, moonPhases[i].Date, moonPhases[i].Date);
                     break;
                 }
 
                 if (phaseDate.toDateString() == date.toDateString()) {
 
-                    switch (moonPhases[i].phase) {
-                        case "New Moon":
+                    switch (moonPhases[i].Phase) {
+                        case 0:
                             day.phase = 'new';
                             nextPhase = 'new-first';
                             break;
-                        case "First Quarter":
+                        case 1:
                             day.phase = 'first';
                             nextPhase = 'first-full';
                             break;
-                        case "Full Moon":
+                        case 2:
                             day.phase = 'full';
                             nextPhase = 'full-last';
                             break;
-                        case "Last Quarter":
+                        case 3:
                             day.phase = 'last';
                             nextPhase = 'last-new';
                             break;
                         default:
                     }
 
-                    if ("New Moon" == moonPhases[i].phase) {
+                    day.date = new Date(phaseDate);
+                    day.time = day.date.getHours() + ':' + day.date.getMinutes()
+
+                    // if it's a new moon, start the new phase
+                    if (0 == moonPhases[i].Phase) {
                         if (i > 0 && cycle[0].phase == 'new') {
                             cycle.push(day);
                             out.push(cycle);
@@ -250,12 +253,12 @@ var app = new Vue({
                     i++; // move to next moon phase
                 } else {
                     // not a moon phase
-                    day.phase = nextPhase;
+                    day.Phase = nextPhase;
                 }
 
                 cycle.push(day);
                 date.setDate(date.getDate() + 1);
-            }
+            } // end while loop
 
             return out;
         }
