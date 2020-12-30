@@ -280,13 +280,6 @@ window.addEventListener('keyup', function (e) {
     }
 });
 
-function serialize(obj) {
-    return '?' + Object.keys(obj).reduce(function (a, k) {
-        a.push(k + '=' + encodeURIComponent(obj[k])); return a
-    },
-        []).join('&')
-}
-
 Date.prototype.addDay = function () {
     this.setDate(this.getDate() + 1);
 }

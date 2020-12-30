@@ -81,8 +81,7 @@ footer {
         flex-direction: column;
     }
 }
-.controls {
-}
+
 .error {
     font-family: monospace;
     padding: 1em;
