@@ -40,7 +40,7 @@ const app = createApp({
 
         // if the URL hash is between the min and max used that for year
         if (window.location.hash.substr(1) > this.minYear && window.location.hash.substr(1) < this.maxYear) {
-            this.sources.moon.apiOptions.year = window.location.hash.substr(1);
+            this.sources.moon.apiOptions.year = parseInt(window.location.hash.substr(1));
         }
 
         // load in data
@@ -155,7 +155,7 @@ const app = createApp({
 
             if (undefined !== data) {
                 const moonData = {
-                    year: year,
+                    year: parseInt(year),
                     phasedata: data
                 };
                 
@@ -343,7 +343,7 @@ const app = createApp({
 
                 // Always add days during construction
                 cycle.push(day);
-                date.setDate(date.getDate() + 1);
+                date.setUTCDate(date.getUTCDate() + 1);
             } // end while loop
 
             return out;
