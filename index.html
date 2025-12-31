@@ -57,7 +57,10 @@
               'month-start': day.day == 1,
               'week-start': day.weekDay == 0,
               'weekday': day.weekDay > 0 && day.weekDay < 6,
-              'today': day.date.toDateString() == today
+              'today': day.date.toDateString() == today,
+              'year-start': day.day == 1 && day.month == 0,
+              'year-end': day.day == 31 && day.month == 11,
+              'not-current-year': !day.currentYear
             }]">
             <div class="phase">
             </div>

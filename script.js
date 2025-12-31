@@ -223,30 +223,21 @@ const app = createApp({
             const currentYearPhases = this.moonPhases.phasedata;
             const currentYear = this.moonPhases.year;
             
-            // Gather moon phases from current and adjacent years if needed
+            // Gather moon phases from current and adjacent years
             let allPhases = [...currentYearPhases];
             
-            // Check if we need previous year data
-            const firstNewMoonIndex = currentYearPhases.findIndex(phase => phase.Phase === 0);
-            if (firstNewMoonIndex > 0) {
-                // There are phases before the first new moon, need previous year
-                const prevYear = currentYear - 1;
-                if (this.cachedData[prevYear]) {
-                    const prevPhases = this.cachedData[prevYear].phasedata;
-                    // Get last few phases from previous year
-                    allPhases = [...prevPhases.slice(-4), ...currentYearPhases];
-                }
+            // Get last 4 phases from previous year if available
+            const prevYear = currentYear - 1;
+            if (this.cachedData[prevYear]) {
+                const prevPhases = this.cachedData[prevYear].phasedata;
+                allPhases = [...prevPhases.slice(-4), ...currentYearPhases];
             }
             
-            // Check if we need next year data (last phase isn't a new moon)
-            const lastPhase = currentYearPhases[currentYearPhases.length - 1];
-            if (lastPhase.Phase !== 0) {
-                const nextYear = currentYear + 1;
-                if (this.cachedData[nextYear]) {
-                    const nextPhases = this.cachedData[nextYear].phasedata;
-                    // Get first few phases from next year
-                    allPhases = [...allPhases, ...nextPhases.slice(0, 4)];
-                }
+            // Get first 4 phases from next year if available
+            const nextYear = currentYear + 1;
+            if (this.cachedData[nextYear]) {
+                const nextPhases = this.cachedData[nextYear].phasedata;
+                allPhases = [...allPhases, ...nextPhases.slice(0, 4)];
             }
             
             // Find first new moon in our combined dataset
@@ -258,7 +249,6 @@ const app = createApp({
             let cycle = [];
             let nextPhase = 'new-first';
             let i = startIndex;
-            let inCurrentYear = true;
 
             while (i < allPhases.length) {
                 const day = {
@@ -271,7 +261,8 @@ const app = createApp({
                     phase: 'none',
                     morning: null,
                     afternoon: null,
-                    evening: null
+                    evening: null,
+                    currentYear: (date.getFullYear() === currentYear)
                 };
 
                 // Check if we have more phase data to process
@@ -315,13 +306,17 @@ const app = createApp({
                         if (0 == allPhases[i].Phase) {
                             if (i > startIndex && cycle.length > 0 && cycle[0].phase == 'new') {
                                 cycle.push(day);
-                                out.push(cycle);
-                                // mesure cycle
-                                this.longestCycle = (cycle.length > this.longestCycle) ? cycle.length : this.longestCycle;
                                 
-                                // If we've completed a cycle and we're past current year, stop
-                                if (day.year > currentYear) {
-                                    break;
+                                // Only include cycles that have days from current year
+                                // But exclude cycles that end with a new moon on Jan 1st of current year
+                                // (that new moon will be the start of the next cycle)
+                                const hasCurrentYearDays = cycle.some(d => d.year === currentYear);
+                                const endsWithJan1NewMoon = day.month === 0 && day.day === 1 && day.year === currentYear;
+                                
+                                if (hasCurrentYearDays && !endsWithJan1NewMoon) {
+                                    out.push(cycle);
+                                    // mesure cycle
+                                    this.longestCycle = (cycle.length > this.longestCycle) ? cycle.length : this.longestCycle;
                                 }
                             }
                             // reset cycle
@@ -338,18 +333,10 @@ const app = createApp({
                     day.phase = nextPhase;
                 }
 
-                // Only add days from current year or if completing a cycle
-                if (day.year === currentYear || cycle.length > 0) {
-                    cycle.push(day);
-                }
+                // Always add days during construction
+                cycle.push(day);
                 date.setDate(date.getDate() + 1);
             } // end while loop
-            
-            // If we have a partial cycle at the end that includes current year days, push it
-            if (cycle.length > 0 && cycle.some(day => day.year === currentYear)) {
-                out.push(cycle);
-                this.longestCycle = (cycle.length > this.longestCycle) ? cycle.length : this.longestCycle;
-            }
 
             return out;
         }

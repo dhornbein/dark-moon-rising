@@ -193,6 +193,7 @@ footer {
 .cycle:last-child .day:hover                { transform-origin: bottom; }
 .cycle:last-child .day:first-child:hover    { transform-origin: bottom left; }
 .cycle:last-child .day:last-child:hover     { transform-origin: bottom right; }
+.day.not-current-year { opacity: 0.4; }
 
 .day.today .date {
     background-color: var(--color-border);
