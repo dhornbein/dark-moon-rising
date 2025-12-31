@@ -154,11 +154,17 @@ footer {
 }
 .day {
     border-right: 1px solid var(--color-border);
+    cursor: pointer;
     padding: 5px 0;
     text-align: center;
     position: relative;
+    transition: all 500ms ease-in;
 }
 .day:hover {
+    background-color: var(--color-bg-darker);
+    transition: all 100ms ease-in;
+}
+.day.active {
     transform: scale(1.5);
     z-index: 1;
     position: relative;
@@ -166,40 +172,41 @@ footer {
     border: 1px solid var(--color-border-accent);
     margin: -1px;
     box-shadow: 1px 4px 8px 2px #0008;
-    transition: transform 100ms ease-in,box-shadow 100ms ease-in;
 }
-.day:hover .phase { position: relative; }
-.day:hover .phase:after {
+.day.active .phase { position: relative; }
+.day.active .phase:after {
     position: absolute;
     width: calc( 100% * 1.5 );
     left: calc(50% - (50% * 1.5));
-    font-size: 50px;
+    font-size: 40px;
     bottom: 0;
     line-height: 1;
     transition: font-size 100ms ease-out 100ms;
 }
-.day.full:hover .phase:after                { text-shadow: 0 0 20px #e1bc4baa; }
-.day.first-full:hover .phase:after,
-.day.full-last:hover .phase:after           { text-shadow: 0 0 20px #e1bc4b88; }
-.day.first:hover .phase:after,
-.day.last:hover .phase:after                { text-shadow: 0 0 20px #e1bc4b44; }
-.day.new-first:hover .phase:after,
-.day.last-new:hover .phase:after            { text-shadow: 0 0 20px #e1bc4b22; }
-.cycle:first-child .day:hover               { transform-origin: top; }
-.cycle:first-child .day:first-child:hover   { transform-origin: top left; }
-.cycle:first-child .day:last-child:hover    { transform-origin: top right; }
-.day:first-child:hover                      { transform-origin: left; }
-.day:last-child:hover                       { transform-origin: right; }
-.cycle:last-child .day:hover                { transform-origin: bottom; }
-.cycle:last-child .day:first-child:hover    { transform-origin: bottom left; }
-.cycle:last-child .day:last-child:hover     { transform-origin: bottom right; }
+.day.full.active .phase:after                { text-shadow: 0 0 20px #e1bc4baa; }
+.day.first-full.active .phase:after,
+.day.full-last.active .phase:after           { text-shadow: 0 0 20px #e1bc4b88; }
+.day.first.active .phase:after,
+.day.last.active .phase:after                { text-shadow: 0 0 20px #e1bc4b44; }
+.day.new-first.active .phase:after,
+.day.last-new.active .phase:after            { text-shadow: 0 0 20px #e1bc4b22; }
+.cycle:first-child .day.active               { transform-origin: top; }
+.cycle:first-child .day:first-child.active   { transform-origin: top left; }
+.cycle:first-child .day:last-child.active    { transform-origin: top right; }
+.day:first-child.active                      { transform-origin: left; }
+.day:last-child.active                       { transform-origin: right; }
+.cycle:last-child .day.active                { transform-origin: bottom; }
+.cycle:last-child .day:first-child.active    { transform-origin: bottom left; }
+.cycle:last-child .day:last-child.active     { transform-origin: bottom right; }
+
+.day.active.month-start:before { content: unset; }
+
 .day.not-current-year { opacity: 0.4; }
 
 .day.today .date {
     background-color: var(--color-border);
 }
 
-.day:hover.month-start:before { content: unset; }
 .day.month-start:before {
     content: "";
     height: calc(100% - 10px);

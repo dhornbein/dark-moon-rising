@@ -26,7 +26,8 @@ const app = createApp({
         moonPhases: false,
         localStorage: 'moonCache',
         loading: false,
-        cachedData: {}
+        cachedData: {},
+        activeDay: null
         }
     },
 
@@ -189,6 +190,13 @@ const app = createApp({
             date[1] = months.indexOf(date[1]) + 1;
             if (date[1] < 10) date[1] = "0" + date[1];
             return date.join('-');
+        },
+        setActiveDay(day) {
+            if (this.activeDay === day.date) { 
+                this.activeDay = null; 
+            } else {
+                this.activeDay = day.date;
+            }
         }
     },
 

@@ -49,6 +49,7 @@
       <div class="calendar" v-else v-cloak>
         <div class="cycle" v-for="cycle in cycles" :style="cycleStyle">
           <div class="day" v-for="day in cycle"
+            @click="setActiveDay(day)"
             :data-month="day.month"
             :data-day="day.day"
             :data-weekday="day.weekDay"
@@ -60,7 +61,8 @@
               'today': day.date.toDateString() == today,
               'year-start': day.day == 1 && day.month == 0,
               'year-end': day.day == 31 && day.month == 11,
-              'not-current-year': !day.currentYear
+              'not-current-year': !day.currentYear,
+              'active': activeDay && day.date.toDateString() == activeDay.toDateString()
             }]">
             <div class="phase">
             </div>
