@@ -1,22 +1,10 @@
 "use strict"
 
-Vue.component("day", {
-    props: ["moon"],
-    template: `
+const { createApp } = Vue;
 
-  `,
-    data: function () {
+const app = createApp({
+    data() {
         return {
-            isSelected: false
-        }
-    },
-    methods: {
-    }
-});
-
-var app = new Vue({
-    el: "#main",
-    data: {
         currentYear: new Date().getFullYear(),
         today: new Date().toDateString(),
         displayYear: null,
@@ -39,9 +27,10 @@ var app = new Vue({
         localStorage: 'moonCache',
         loading: false,
         cachedData: {}
+        }
     },
 
-    created: function () {
+    created() {
         // pull from local storage
         if (window.localStorage.moonCache) {
             this.cachedData = JSON.parse(window.localStorage.getItem(this.localStorage))
@@ -58,32 +47,32 @@ var app = new Vue({
     },
 
     methods: {
-        nextYear: function () {
+        nextYear() {
             this.sources.moon.apiOptions.year++;
             this.getMoonData();
         },
-        prevYear: function () {
+        prevYear() {
             this.sources.moon.apiOptions.year--;
             this.getMoonData();
         },
-        gotoCurrentYear: function () {
+        gotoCurrentYear() {
             this.sources.moon.apiOptions.year = this.currentYear;
             this.getMoonData();
         },
-        setHash: function () {
+        setHash() {
             if (this.moonPhases.year) {
                 window.location.hash = this.moonPhases.year;
             }
         },
-        getMoonData: function () {
-            var api = this.sources.moon,
-                year = api.apiOptions.year;
+        getMoonData() {
+            const api = this.sources.moon;
+            const year = api.apiOptions.year;
 
             if (year == this.moonPhases.year) {
                 console.log('year already on display...');
                 return null;
             } else if (year < this.minYear || year > this.maxYear) {
-                this.setError('Year must be between ' + this.minYear + ' and ' + this.maxYear);
+                this.setError(`Year must be between ${this.minYear} and ${this.maxYear}`);
                 console.log('Year out of range');
                 return null;
             }
@@ -93,6 +82,9 @@ var app = new Vue({
                 this.moonPhases = this.cachedData[year]
                 console.log('pulling data from cache', year);
                 this.setHash();
+                
+                // Pre-fetch adjacent years for smooth transitions
+                this.prefetchAdjacentYears(year);
             } else {
                 // fetch new data
                 console.log('fetching data from api...', year);
@@ -100,7 +92,29 @@ var app = new Vue({
             }
 
         },
-        cacheData: function () {
+        prefetchAdjacentYears(year) {
+            const prevYear = year - 1;
+            const nextYear = year + 1;
+            
+            // Fetch previous year if not cached and in range
+            if (!this.cachedData[prevYear] && prevYear >= this.minYear) {
+                console.log('pre-fetching previous year:', prevYear);
+                this.fetchData({ 
+                    ...this.sources.moon, 
+                    apiOptions: { year: prevYear } 
+                }, true);
+            }
+            
+            // Fetch next year if not cached and in range
+            if (!this.cachedData[nextYear] && nextYear <= this.maxYear) {
+                console.log('pre-fetching next year:', nextYear);
+                this.fetchData({ 
+                    ...this.sources.moon, 
+                    apiOptions: { year: nextYear } 
+                }, true);
+            }
+        },
+        cacheData() {
             if (this.moonPhases && !this.cachedData[this.moonPhases.year]) {
                 this.cachedData[this.moonPhases.year] = this.moonPhases;
                 console.log('adding data to cache', this.moonPhases.year);
@@ -108,48 +122,69 @@ var app = new Vue({
                 console.log('Adding cache data to local storage...');
             }
         },
-        fetchData: function (source) {
-            var xhr = new XMLHttpRequest(),
-                self = this,
-                url = source.apiURL + source.apiOptions.year;
-
-            this.loading = true;
-            xhr.addEventListener("progress", updateProgress);
-
-            xhr.open('GET', url);
-            xhr.onload = function () {
-                self.loading = false;
-                self.loadData(xhr, source.apiOptions.year);
-            };
-            xhr.onerror = function () {
-                self.setError('There was an error connecting to the data api! Status Code: ' + xhr.status + ' Message: ' + xhr.statusText);
-            };
-            xhr.send(null);
+        async fetchData(source, isBackground = false) {
+            const url = source.apiURL + source.apiOptions.year;
+            
+            if (!isBackground) {
+                this.loading = true;
+            }
+            
+            try {
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                this.loadData(data, source.apiOptions.year, url, isBackground);
+            } catch (error) {
+                if (!isBackground) {
+                    this.setError(`There was an error connecting to the data api! ${error.message}`);
+                } else {
+                    console.log(`Background fetch failed for ${source.apiOptions.year}:`, error.message);
+                }
+            } finally {
+                if (!isBackground) {
+                    this.loading = false;
+                }
+            }
         },
-        loadData: function (xhr, year) {
-            var data = JSON.parse(xhr.responseText);
+        loadData(data, year, url, isBackground = false) {
 
             if (undefined !== data) {
-                this.moonPhases = {
+                const moonData = {
                     year: year,
                     phasedata: data
                 };
-                console.log('data loaded into app from: ', xhr.responseURL, xhr);
-                this.setHash();
+                
+                if (!isBackground) {
+                    this.moonPhases = moonData;
+                    this.setHash();
+                }
+                
+                // Always cache the data
+                if (!this.cachedData[year]) {
+                    this.cachedData[year] = moonData;
+                    console.log('adding data to cache', year);
+                    window.localStorage.setItem(this.localStorage, JSON.stringify(this.cachedData));
+                }
+                
+                console.log('data loaded into app from: ', url);
             } else {
-                console.log('loaded data is undefined!', xhr);
+                console.log('loaded data is undefined!');
             }
         },
-        setError: function (msg) {
+        setError(msg) {
             this.moonPhases = {
                 error: true,
                 type: msg
             }
         },
-        parsePhaseDate: function (raw) {
+        parsePhaseDate(raw) {
             // 2018 Jan 03
-            var date = raw.toLowerCase().split(' '),
-                months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+            const date = raw.toLowerCase().split(' ');
+            const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
             date[1] = months.indexOf(date[1]) + 1;
             if (date[1] < 10) date[1] = "0" + date[1];
@@ -159,43 +194,74 @@ var app = new Vue({
 
     watch: {
         // whenever moonPhases is updated cache the data
-        moonPhases: function (val, oldVal) {
+        moonPhases(val, oldVal) {
             this.cacheData();
         }
     },
 
     computed: {
-        year: function () {
+        year() {
             return (this.moonPhases) ? this.moonPhases.year : this.sources.moon.apiOptions.year;
         },
-        cycleStyle: function () {
+        cycleStyle() {
             if (31 === this.longestCycle) return null;
             return {
-                gridTemplateColumns: 'repeat(' + this.longestCycle + ', 1fr)'
+                gridTemplateColumns: `repeat(${this.longestCycle}, 1fr)`
             }
         },
-        newMoons: function () {
-            var out = [];
-            for (var i = 0; i < this.moonPhases.length; i++) {
+        newMoons() {
+            const out = [];
+            for (let i = 0; i < this.moonPhases.length; i++) {
                 if (0 === this.moonPhases[i].Phase) {
                     out.push(this.moonPhases[i]);
                 }
             }
             return out;
         },
-        cycles: function () {
-            var out = [],
-                moonPhases = this.moonPhases.phasedata,
-                start = moonPhases[0].Date + 'Z',
-                end = moonPhases[moonPhases.length - 1].Date + 'Z',
-                date = new Date(start),
-                endDate = new Date(end),
-                cycle = [],
-                nextPhase = 'new-first',
-                i = 0;
+        cycles() {
+            const out = [];
+            const currentYearPhases = this.moonPhases.phasedata;
+            const currentYear = this.moonPhases.year;
+            
+            // Gather moon phases from current and adjacent years if needed
+            let allPhases = [...currentYearPhases];
+            
+            // Check if we need previous year data
+            const firstNewMoonIndex = currentYearPhases.findIndex(phase => phase.Phase === 0);
+            if (firstNewMoonIndex > 0) {
+                // There are phases before the first new moon, need previous year
+                const prevYear = currentYear - 1;
+                if (this.cachedData[prevYear]) {
+                    const prevPhases = this.cachedData[prevYear].phasedata;
+                    // Get last few phases from previous year
+                    allPhases = [...prevPhases.slice(-4), ...currentYearPhases];
+                }
+            }
+            
+            // Check if we need next year data (last phase isn't a new moon)
+            const lastPhase = currentYearPhases[currentYearPhases.length - 1];
+            if (lastPhase.Phase !== 0) {
+                const nextYear = currentYear + 1;
+                if (this.cachedData[nextYear]) {
+                    const nextPhases = this.cachedData[nextYear].phasedata;
+                    // Get first few phases from next year
+                    allPhases = [...allPhases, ...nextPhases.slice(0, 4)];
+                }
+            }
+            
+            // Find first new moon in our combined dataset
+            let startIndex = allPhases.findIndex(phase => phase.Phase === 0);
+            if (startIndex === -1) startIndex = 0;
+            
+            const start = allPhases[startIndex].Date + 'Z';
+            const date = new Date(start);
+            let cycle = [];
+            let nextPhase = 'new-first';
+            let i = startIndex;
+            let inCurrentYear = true;
 
-            while (date <= endDate) {
-                var day = {
+            while (i < allPhases.length) {
+                const day = {
                     date: new Date(date),
                     day: date.getDate(),
                     weekDay: date.getDay(),
@@ -208,82 +274,96 @@ var app = new Vue({
                     evening: null
                 };
 
-                var phaseDate = new Date(moonPhases[i].Date + 'Z');
+                // Check if we have more phase data to process
+                if (i < allPhases.length) {
+                    const phaseDate = new Date(allPhases[i].Date + 'Z');
 
-                if (phaseDate == "Invalid Date") {
-                    console.log(day, moonPhases[i].Date, moonPhases[i].Date);
-                    break;
-                }
-
-                if (phaseDate.toDateString() == date.toDateString()) {
-
-                    switch (moonPhases[i].Phase) {
-                        case 0:
-                            day.phase = 'new';
-                            nextPhase = 'new-first';
-                            break;
-                        case 1:
-                            day.phase = 'first';
-                            nextPhase = 'first-full';
-                            break;
-                        case 2:
-                            day.phase = 'full';
-                            nextPhase = 'full-last';
-                            break;
-                        case 3:
-                            day.phase = 'last';
-                            nextPhase = 'last-new';
-                            break;
-                        default:
+                    if (phaseDate == "Invalid Date") {
+                        console.log(day, allPhases[i].Date, allPhases[i].Date);
+                        break;
                     }
 
-                    day.date = new Date(phaseDate);
-                    day.time = {
-                        hours: day.date.getHours(),
-                        minutes: (day.date.getMinutes() < 10 ? '0' : '') + day.date.getMinutes()
-                    };
+                    if (phaseDate.toDateString() == date.toDateString()) {
 
-                    // if it's a new moon, start the new phase
-                    if (0 == moonPhases[i].Phase) {
-                        if (i > 0 && cycle[0].phase == 'new') {
-                            cycle.push(day);
-                            out.push(cycle);
+                        switch (allPhases[i].Phase) {
+                            case 0:
+                                day.phase = 'new';
+                                nextPhase = 'new-first';
+                                break;
+                            case 1:
+                                day.phase = 'first';
+                                nextPhase = 'first-full';
+                                break;
+                            case 2:
+                                day.phase = 'full';
+                                nextPhase = 'full-last';
+                                break;
+                            case 3:
+                                day.phase = 'last';
+                                nextPhase = 'last-new';
+                                break;
+                            default:
                         }
-                        // mesure cycle
-                        this.longestCycle = (cycle.length > this.longestCycle) ? cycle.length : this.longestCycle;
-                        // reset cycle
-                        cycle = [];
-                    }
 
-                    i++; // move to next moon phase
+                        day.date = new Date(phaseDate);
+                        day.time = {
+                            hours: day.date.getHours(),
+                            minutes: (day.date.getMinutes() < 10 ? '0' : '') + day.date.getMinutes()
+                        };
+
+                        // if it's a new moon, start the new phase
+                        if (0 == allPhases[i].Phase) {
+                            if (i > startIndex && cycle.length > 0 && cycle[0].phase == 'new') {
+                                cycle.push(day);
+                                out.push(cycle);
+                                // mesure cycle
+                                this.longestCycle = (cycle.length > this.longestCycle) ? cycle.length : this.longestCycle;
+                                
+                                // If we've completed a cycle and we're past current year, stop
+                                if (day.year > currentYear) {
+                                    break;
+                                }
+                            }
+                            // reset cycle
+                            cycle = [];
+                        }
+
+                        i++; // move to next moon phase
+                    } else {
+                        // not a moon phase
+                        day.phase = nextPhase;
+                    }
                 } else {
-                    // not a moon phase
+                    // No more phase data, continue with last known phase
                     day.phase = nextPhase;
                 }
 
-                cycle.push(day);
+                // Only add days from current year or if completing a cycle
+                if (day.year === currentYear || cycle.length > 0) {
+                    cycle.push(day);
+                }
                 date.setDate(date.getDate() + 1);
             } // end while loop
+            
+            // If we have a partial cycle at the end that includes current year days, push it
+            if (cycle.length > 0 && cycle.some(day => day.year === currentYear)) {
+                out.push(cycle);
+                this.longestCycle = (cycle.length > this.longestCycle) ? cycle.length : this.longestCycle;
+            }
 
             return out;
         }
     },
 });
 
-window.addEventListener('keyup', function (e) {
-    var key = e.keyCode ? e.keyCode : e.which;
+app.mount('#main');
 
-    if (key == 37) { // left
+window.addEventListener('keyup', function (e) {
+    const key = e.key;
+
+    if (key === 'ArrowLeft') {
         app.prevYear();
-    } else if (key == 39) { // right
+    } else if (key === 'ArrowRight') {
         app.nextYear();
     }
 });
-
-Date.prototype.addDay = function () {
-    this.setDate(this.getDate() + 1);
-}
-
-function updateProgress(e) {
-    console.log(e.loaded);
-}

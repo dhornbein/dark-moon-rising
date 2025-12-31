@@ -1,3 +1,16 @@
+:root {
+    --color-bg-dark: #192538;
+    --color-bg-darker: #09101b;
+    --color-text-primary: #80aff9;
+    --color-text-accent: #e1bc4b;
+    --color-full-moon: #e1bc4b;
+    --color-waxing-waning: #c2b37f;
+    --color-quarter: #b6b195;
+    --color-crescent: #9bb1cd;
+    --color-border: #80aff933;
+    --color-border-accent: #e1bc4b33;
+}
+
 html {
     background-color: #fff;
     font-size: 16px;
@@ -18,9 +31,9 @@ html {
     box-sizing: inherit;
 }
 body {
-    background-color: #192538;
-    background-image: linear-gradient(to right, #0005 0%, #192538ff 50%, #0005 100%);
-    color: #80aff9;
+    background-color: var(--color-bg-dark);
+    background-image: linear-gradient(to right, #0005 0%, var(--color-bg-dark) 50%, #0005 100%);
+    color: var(--color-text-primary);
     font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
     font-weight: 400;
     line-height: 1.5;
@@ -42,7 +55,7 @@ button {
     -webkit-appearance: none;
 
     cursor: pointer;
-    background: #09101b;
+    background: var(--color-bg-darker);
     border-radius: 3px;
     padding: 2px 10px;
     line-height: 1.5;
@@ -50,12 +63,12 @@ button {
 }
     button:hover,
 a:hover {
-    color: #e1bc4b;
+    color: var(--color-text-accent);
 }
 input {
-    border: 1px solid #80aff955;
-    background-color: #09101b;
-    color: #80aff9;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-darker);
+    color: var(--color-text-primary);
     padding: 2px 15px;
     line-height: 1.5;
     font-size: 0.8em;
@@ -68,7 +81,7 @@ input {
 }
     header,
 footer {
-    background-color: #192538;
+    background-color: var(--color-bg-dark);
     display: flex;
     justify-content: space-between;
     padding: 0.5em;
@@ -132,15 +145,15 @@ footer {
     }
 }
 .calendar {
-    border-top: 1px solid #80aff933;
-    border-bottom: 1px solid #80aff933;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
 }
 .cycle {
     display: grid;
     grid-template-columns: repeat(31,1fr);
 }
 .day {
-    border-right: 1px solid #80aff933;
+    border-right: 1px solid var(--color-border);
     padding: 5px 0;
     text-align: center;
     position: relative;
@@ -149,8 +162,8 @@ footer {
     transform: scale(1.5);
     z-index: 1;
     position: relative;
-    background-color: #192538;
-    border: 1px solid #e1bc4b33;
+    background-color: var(--color-bg-dark);
+    border: 1px solid var(--color-border-accent);
     margin: -1px;
     box-shadow: 1px 4px 8px 2px #0008;
     transition: transform 100ms ease-in,box-shadow 100ms ease-in;
@@ -182,7 +195,7 @@ footer {
 .cycle:last-child .day:last-child:hover     { transform-origin: bottom right; }
 
 .day.today .date {
-    background-color: #80aff933;
+    background-color: var(--color-border);
 }
 
 .day:hover.month-start:before { content: unset; }
@@ -236,19 +249,19 @@ footer {
 }
 
 .full .month, .full .week, .full .date {
-    color: #e1bc4b;
+    color: var(--color-full-moon);
 }
     .first-full .month, .first-full .date,
 .full-last .month, .full-last .date {
-    color: #c2b37f;
+    color: var(--color-waxing-waning);
 }
     .first .month, .first .week, .first .date,
 .last .month, .last .week, .last .date {
-    color: #b6b195;
+    color: var(--color-quarter);
 }
     .new-first .month, .new-first .date,
 .last-new .month, .last-new .date {
-    color: #9bb1cd;
+    color: var(--color-crescent);
 }
 
 .morning,
